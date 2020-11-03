@@ -26,6 +26,9 @@ const handleKeyPress = (e) => {
         case 'k':
             snare();
             break;
+        case 'l':
+            hihat();
+            break;
     }
 }
 
@@ -104,6 +107,37 @@ const snare = () => {
     noise.stop(now + 0.2);
 }
 
+const hihat = () => {
+    initContext();
+    const fundamental = 40;
+    const ratios = [2, 3, 4.16, 5.43, 6.79, 8.21];
+
+    const bandPass = context.createBiquadFilter();
+    bandPass.type = "bandpass";
+    bandPass.frequency.value = 10000;
+
+    const oscEnvelope = context.createGain();
+    oscEnvelope.gain.setValueAtTime(1, context.currentTime);
+    oscEnvelope.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.05);
+
+    const highpass = context.createBiquadFilter();
+    highpass.type = "highpass";
+    highpass.frequency.value = 7000;
+
+    ratios.forEach((ratio) => {
+        const osc = context.createOscillator();
+        osc.type = "square";
+        osc.frequency.value = fundamental * ratio;
+        osc.connect(bandPass)
+            .connect(oscEnvelope)
+            .connect(highpass)
+            .connect(context.destination);
+
+        osc.start(context.currentTime);
+        osc.stop(context.currentTime + 0.05);
+    });
+}
+
 const init = () => {
     Object.assign(document.body.style, { margin: 0, backgroundColor: '#000000' });
     const canvas = document.createElement('canvas');
@@ -121,10 +155,9 @@ const init = () => {
         position: 'absolute'
     });
 
-    const bumButton = createButton('bum (j)', kick)
-    const tishButton = createButton('tish (k)', snare);
-    buttonContainer.appendChild(bumButton);
-    buttonContainer.appendChild(tishButton);
+    buttonContainer.appendChild(createButton('bum (j)', kick));
+    buttonContainer.appendChild(createButton('tish (k)', snare));
+    buttonContainer.appendChild(createButton('tap (l)', hihat));
 
     document.body.appendChild(buttonContainer);
     document.body.appendChild(canvas);
