@@ -94,7 +94,7 @@ const snare = () => {
 }
 
 const init = () => {
-    Object.assign(document.body.style, { margin: 0 });
+    Object.assign(document.body.style, { margin: 0, backgroundColor: '#000000' });
     const canvas = document.createElement('canvas');
     canvas.id = 'canvas';
     canvas.width = window.innerWidth;
