@@ -21,13 +21,16 @@ const createButton = (text, fn) => {
 const handleKeyPress = (e) => {
     switch(e.key) {
         case 'j':
-            kick();
+            initContext();
+            kick(context.currentTime);
             break;
         case 'k':
-            snare();
+            initContext();
+            snare(context.currentTime);
             break;
         case 'l':
-            hihat();
+            initContext();
+            hihat(context.currentTime);
             break;
     }
 }
@@ -42,14 +45,12 @@ const createNoiseBuffer = (context) => {
     return buffer;
 }
 
-const kick = () => {
-    initContext();
+const kick = (time) => {
     const freq = 150,
         len = 0.5,
         release = 0.1,
         gainNode = context.createGain(),
-        oscNode = context.createOscillator(),
-        now = context.currentTime;
+        oscNode = context.createOscillator();
 
     oscNode.type = "sine";
     oscNode.frequency.value = freq;
@@ -57,25 +58,22 @@ const kick = () => {
         .connect(analyser)
         .connect(context.destination);
 
-    gainNode.gain.cancelScheduledValues(now);
-    oscNode.frequency.setValueAtTime(freq, now);
-    gainNode.gain.setValueAtTime(1, now);
-    oscNode.frequency.exponentialRampToValueAtTime(0.01, now + 0.5);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, now + len - release);
+    gainNode.gain.cancelScheduledValues(time);
+    oscNode.frequency.setValueAtTime(freq, time);
+    gainNode.gain.setValueAtTime(1, time);
+    oscNode.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, time + len - release);
 
-    oscNode.start(now);
-    oscNode.stop(now + len);
+    oscNode.start(time);
+    oscNode.stop(time + len);
 }
 
-const snare = () => {
-    initContext();
-
+const snare = (time) => {
     const noise = context.createBufferSource(),
         noiseFilter = context.createBiquadFilter(),
         noiseEnvelope = context.createGain(),
         oscNode = context.createOscillator(),
-        oscEnvelope = context.createGain(),
-        now = context.currentTime;
+        oscEnvelope = context.createGain();
 
     noise.buffer = createNoiseBuffer(context);
 
@@ -94,21 +92,20 @@ const snare = () => {
         .connect(analyser)
         .connect(context.destination);
 
-    noiseEnvelope.gain.setValueAtTime(1, now);
-    noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-    noise.start(now)
+    noiseEnvelope.gain.setValueAtTime(1, time);
+    noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+    noise.start(time)
 
-    oscNode.frequency.setValueAtTime(100, now);
-    oscEnvelope.gain.setValueAtTime(0.7, now);
-    oscEnvelope.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-    oscNode.start(now)
+    oscNode.frequency.setValueAtTime(100, time);
+    oscEnvelope.gain.setValueAtTime(0.7, time);
+    oscEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+    oscNode.start(time)
 
-    oscNode.stop(now + 0.2);
-    noise.stop(now + 0.2);
+    oscNode.stop(time + 0.2);
+    noise.stop(time + 0.2);
 }
 
-const hihat = () => {
-    initContext();
+const hihat = (time) => {
     const fundamental = 40;
     const ratios = [2, 3, 4.16, 5.43, 6.79, 8.21];
 
@@ -117,8 +114,8 @@ const hihat = () => {
     bandPass.frequency.value = 10000;
 
     const oscEnvelope = context.createGain();
-    oscEnvelope.gain.setValueAtTime(1, context.currentTime);
-    oscEnvelope.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.05);
+    oscEnvelope.gain.setValueAtTime(1, time);
+    oscEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
 
     const highpass = context.createBiquadFilter();
     highpass.type = "highpass";
@@ -134,10 +131,16 @@ const hihat = () => {
             .connect(analyser)
             .connect(context.destination);
 
-        osc.start(context.currentTime);
-        osc.stop(context.currentTime + 0.05);
+        osc.start(time);
+        osc.stop(time + 0.05);
     });
 }
+
+const dubstep = () => {
+    // for(let i = 1; i < 10; i++) {
+    //     let offset = i * ;
+    // }
+};
 
 const init = () => {
     Object.assign(document.body.style, { margin: 0, backgroundColor: '#000000' });
@@ -156,9 +159,10 @@ const init = () => {
         position: 'absolute'
     });
 
-    buttonContainer.appendChild(createButton('bum (j)', kick));
-    buttonContainer.appendChild(createButton('tish (k)', snare));
-    buttonContainer.appendChild(createButton('tap (l)', hihat));
+    buttonContainer.appendChild(createButton('bum (j)', () => (initContext(), kick(context.currentTime))));
+    buttonContainer.appendChild(createButton('tish (k)', () => (initContext(), snare(context.currentTime))));
+    buttonContainer.appendChild(createButton('tap (l)', () => (initContext(), hihat(context.currentTime))));
+    buttonContainer.appendChild(createButton('Dubstep', () => (initContext(), dubstep())));
 
     document.body.appendChild(buttonContainer);
     document.body.appendChild(canvas);
