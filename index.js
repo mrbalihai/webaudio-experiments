@@ -18,6 +18,17 @@ const createButton = (text, fn) => {
     return button;
 }
 
+const handleKeyPress = (e) => {
+    switch(e.key) {
+        case 'j':
+            kick();
+            break;
+        case 'k':
+            snare();
+            break;
+    }
+}
+
 const createNoiseBuffer = (context) => {
     const bufferSize = context.sampleRate;
     const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
@@ -110,8 +121,8 @@ const init = () => {
         position: 'absolute'
     });
 
-    const bumButton = createButton('bum', kick)
-    const tishButton = createButton('tish', snare);
+    const bumButton = createButton('bum (j)', kick)
+    const tishButton = createButton('tish (k)', snare);
     buttonContainer.appendChild(bumButton);
     buttonContainer.appendChild(tishButton);
 
@@ -124,6 +135,8 @@ const init = () => {
     window.addEventListener('resize', () =>
         (canvas.width = canvas.style.width = window.innerWidth,
         canvas.height = canvas.style.height = window.innerHeight));
+
+    window.addEventListener('keypress', handleKeyPress);
 
     function draw() {
         requestAnimationFrame(draw);
@@ -139,13 +152,12 @@ const init = () => {
         ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
         const barWidth = (window.innerWidth / bufferLength) * 2.5;
-        let barHeight;
         let x = 0;
         for(let i = 0; i < bufferLength; i++) {
-            barHeight = dataArray[i] / 2;
+            const barHeight = window.innerHeight * (dataArray[i] / 255);
 
             ctx.fillStyle = `rgb(50, 50, 50)`;
-            ctx.fillRect(x, 0, barWidth, barHeight);
+            ctx.fillRect(x, window.innerHeight - barHeight, barWidth, barHeight);
 
             x += barWidth + 1;
         }
