@@ -131,6 +131,7 @@ const hihat = () => {
         osc.connect(bandPass)
             .connect(oscEnvelope)
             .connect(highpass)
+            .connect(analyser)
             .connect(context.destination);
 
         osc.start(context.currentTime);
