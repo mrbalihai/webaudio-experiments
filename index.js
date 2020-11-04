@@ -1,3 +1,6 @@
+import * as THREE from './lib/three/build/three.module.js';
+import { FlyControls } from './lib/three/examples/jsm/controls/FlyControls.js';
+
 let context = undefined;
 let analyser = undefined;
 let ctx = undefined;
@@ -136,23 +139,8 @@ const hihat = (time) => {
     });
 }
 
-const dubstep = () => {
-    // for(let i = 1; i < 10; i++) {
-    //     let offset = i * ;
-    // }
-};
-
 const init = () => {
     Object.assign(document.body.style, { margin: 0, backgroundColor: '#000000' });
-    const canvas = document.createElement('canvas');
-    canvas.id = 'canvas';
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    Object.assign(canvas.style, {
-        width: `${window.innerWidth}px`,
-        height: `${window.innerHeight}px`,
-        display: 'block',
-    });
 
     const buttonContainer = document.createElement('div');
     Object.assign(buttonContainer.style, {
@@ -162,21 +150,42 @@ const init = () => {
     buttonContainer.appendChild(createButton('bum (j)', () => (initContext(), kick(context.currentTime))));
     buttonContainer.appendChild(createButton('tish (k)', () => (initContext(), snare(context.currentTime))));
     buttonContainer.appendChild(createButton('tap (l)', () => (initContext(), hihat(context.currentTime))));
-    buttonContainer.appendChild(createButton('Dubstep', () => (initContext(), dubstep())));
 
     document.body.appendChild(buttonContainer);
-    document.body.appendChild(canvas);
 
-    ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeigh);
+    const clock = new THREE.Clock();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 50);
+    camera.position.set(2.5, 1, 2);
+    const scene = new THREE.Scene();
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-    window.addEventListener('resize', () =>
-        (canvas.width = canvas.style.width = window.innerWidth,
-        canvas.height = canvas.style.height = window.innerHeight));
+    const controls = new FlyControls(camera, document.body);
+    controls.movementSpeed = 2;
+    controls.rollSpeed = Math.PI / 14;
+    controls.autoForward = false;
+    controls.dragToLook = true;
 
+    document.body.append(renderer.domElement);
+
+    window.addEventListener('resize', () => (renderer.setSize(window.innerWidth, window.innerHeight)));
     window.addEventListener('keypress', handleKeyPress);
 
+    const bars = [];
+    const barGeom = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+    const barMat = new THREE.MeshNormalMaterial();
+    for(let i=0; i<50; i++) {
+        const barMesh = new THREE.Mesh(barGeom, barMat);
+        barMesh.position.set((i * 0.11), 0, 0);
+        barMesh.scale.y = 0.1;
+        scene.add(barMesh);
+        bars.push(barMesh);
+    }
+    camera.lookAt(bars[24].position);
+    renderer.render(scene, camera);
+
     function draw() {
+        const delta = clock.getDelta();
         requestAnimationFrame(draw);
 
         if (analyser === undefined)
@@ -186,19 +195,22 @@ const init = () => {
         const dataArray = new Uint8Array(bufferLength);
 
         analyser.getByteFrequencyData(dataArray);
-        ctx.fillStyle = 'rgb(0, 0, 0)';
-        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
-        const barWidth = (window.innerWidth / bufferLength) * 2.5;
+        const maxHeight = 5;
         let x = 0;
         for(let i = 0; i < bufferLength; i++) {
-            const barHeight = window.innerHeight * (dataArray[i] / 255);
+            const barHeight = maxHeight * (dataArray[i] / 255);
+            if (bars[i] && bars[i].scale) {
+                if (barHeight < 0.1)
+                    bars[i].scale.y = 0.1;
+                else
+                    bars[i].scale.y = barHeight;
 
-            ctx.fillStyle = `rgb(50, 50, 50)`;
-            ctx.fillRect(x, window.innerHeight - barHeight, barWidth, barHeight);
-
-            x += barWidth + 1;
+            }
         }
+
+        controls.update(delta);
+        renderer.render(scene, camera);
     }
     draw();
 }
