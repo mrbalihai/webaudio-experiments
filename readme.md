@@ -1,6 +1,5 @@
-# WebAudio Experiments
-
-[https://mrbalihai.github.io/webaudio-experiments](Live Demo)
+# WebAudio Experiments
+[Live Demo](https://mrbalihai.github.io/webaudio-experiments)
 
 ## Resources
 - Drum synthesis examples used from here [https://sonoport.github.io/synthesising-sounds-webaudio.html](https://sonoport.github.io/synthesising-sounds-webaudio.html)
@@ -13,7 +12,7 @@ The 'j', 'k' and 'l' keys are mapped to different drums. The visualisation is do
 
 Eventually I want to go on to create a sequencer that can record samples and apply filters.
 
-## Getting Started
+## Getting Started
 An index.html is included that loads the script using browser native module loading.
 
 ```
