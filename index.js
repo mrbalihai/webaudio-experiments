@@ -5,6 +5,8 @@ let context = undefined;
 let analyser = undefined;
 let ctx = undefined;
 
+// A bit of a dirty way to intialise the global WebAudio context
+// This function should be called on every action to ensure it's correctly initialised
 const initContext = () => {
     if (context === undefined)
         context = new AudioContext();
@@ -38,6 +40,7 @@ const handleKeyPress = (e) => {
     }
 }
 
+// Noise used to generate the snare
 const createNoiseBuffer = (context) => {
     const bufferSize = context.sampleRate;
     const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
@@ -48,6 +51,8 @@ const createNoiseBuffer = (context) => {
     return buffer;
 }
 
+// Generate a sine wave at a low frequency
+//  to simulate a bass drum kick
 const kick = (time) => {
     const freq = 150,
         len = 0.5,
@@ -71,6 +76,8 @@ const kick = (time) => {
     oscNode.stop(time + len);
 }
 
+// Generate noise and do a high pass & combine with a triangle oscilation
+//  to generate a snare-like sound
 const snare = (time) => {
     const noise = context.createBufferSource(),
         noiseFilter = context.createBiquadFilter(),
@@ -108,6 +115,8 @@ const snare = (time) => {
     noise.stop(time + 0.2);
 }
 
+// Create an array of square waves at different frequencies
+//  then high pass filter to create the high-hat sound
 const hihat = (time) => {
     const fundamental = 40;
     const ratios = [2, 3, 4.16, 5.43, 6.79, 8.21];
@@ -171,6 +180,7 @@ const init = () => {
     window.addEventListener('resize', () => (renderer.setSize(window.innerWidth, window.innerHeight)));
     window.addEventListener('keypress', handleKeyPress);
 
+    //Render the visualisation
     const bars = [];
     const barGeom = new THREE.BoxGeometry(0.1, 0.1, 0.1);
     const barMat = new THREE.MeshNormalMaterial();
@@ -184,6 +194,7 @@ const init = () => {
     camera.lookAt(bars[24].position);
     renderer.render(scene, camera);
 
+    // Animation loop
     function draw() {
         const delta = clock.getDelta();
         requestAnimationFrame(draw);
@@ -196,6 +207,7 @@ const init = () => {
 
         analyser.getByteFrequencyData(dataArray);
 
+        // scale the bars based on the sample array
         const maxHeight = 5;
         let x = 0;
         for(let i = 0; i < bufferLength; i++) {
